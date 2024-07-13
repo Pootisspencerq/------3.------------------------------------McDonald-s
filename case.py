@@ -1,43 +1,57 @@
 import pandas as pd
+import matplotlib.pyplot as plt
 
-# Завантаження даних з файлу CSV
-data = pd.read_csv('menu.csv')
+# Завантаження даних з файлу
+file_path = 'menu.csv'
+data = pd.read_csv(file_path)
 
-# Вивід перших кількох рядків таблиці
-print("Перші кілька рядків таблиці:")
-print(data.head())
+# Видалення пустих рядків
+cleaned_data = data.dropna(how='all')
 
-# Вивід назв стовпців
-print("\nНазви стовпців:")
-print(data.columns)
+# Збереження очищених даних у новий файл
+cleaned_file_path = 'cleaned_menu.csv'
+cleaned_data.to_csv(cleaned_file_path, index=False)
 
-# Огляд загальної інформації про дані
-print("\nЗагальна інформація:")
-print(data.info())
+# Побудова графіку середньої калорійності страв за категоріями
+average_calories_by_category = cleaned_data.groupby('Category')['Calories'].mean().sort_values()
 
-# Підрахунок середньої калорійності
-if 'Calories' in data.columns:
-    average_calories = data['Calories'].mean()
-    print(f"\nСередня калорійність страв: {average_calories:.2f} ккал")
+# Налаштування графіку
+plt.figure(figsize=(12, 8))
+average_calories_by_category.plot(kind='barh', color='skyblue')
+plt.xlabel('Середня калорійність')
+plt.ylabel('Категорія')
+plt.title('Середня калорійність страв за категоріями')
+
+# Збереження графіку у файл
+plot_file_path = 'average_calories_by_category.png'
+plt.savefig(plot_file_path)
+
+# Відображення графіку
+plt.show()
+
+# Перевірка наявності стовпця 'Calories' та обчислення середньої калорійності
+if 'Calories' in cleaned_data.columns:
+    average_calories = cleaned_data['Calories'].mean()
+    print(f"Середня калорійність страв: {average_calories:.2f} ккал")
 else:
-    print("\nСтовпець 'Calories' не знайдено в таблиці.")
+    print("Стовпець 'Calories' не знайдено в таблиці.")
 
-# Підрахунок співвідношення БЖУ
-if all(x in data.columns for x in ['Protein', 'Total Fat', 'Carbohydrates']):
-    data['protein_ratio'] = data['Protein'] / (data['Protein'] + data['Total Fat'] + data['Carbohydrates'])
-    data['fat_ratio'] = data['Total Fat'] / (data['Protein'] + data['Total Fat'] + data['Carbohydrates'])
-    data['carbs_ratio'] = data['Carbohydrates'] / (data['Protein'] + data['Total Fat'] + data['Carbohydrates'])
+# Перевірка наявності стовпців для БЖУ та обчислення їх співвідношення
+if all(x in cleaned_data.columns for x in ['Protein', 'Total Fat', 'Carbohydrates']):
+    cleaned_data['protein_ratio'] = cleaned_data['Protein'] / (cleaned_data['Protein'] + cleaned_data['Total Fat'] + cleaned_data['Carbohydrates'])
+    cleaned_data['fat_ratio'] = cleaned_data['Total Fat'] / (cleaned_data['Protein'] + cleaned_data['Total Fat'] + cleaned_data['Carbohydrates'])
+    cleaned_data['carbs_ratio'] = cleaned_data['Carbohydrates'] / (cleaned_data['Protein'] + cleaned_data['Total Fat'] + cleaned_data['Carbohydrates'])
 
     print("\nСпіввідношення БЖУ:")
-    print(data[['Item', 'protein_ratio', 'fat_ratio', 'carbs_ratio']])
+    print(cleaned_data[['Item', 'protein_ratio', 'fat_ratio', 'carbs_ratio']].head())
 else:
-    print("\nОдного зі стовпців 'Protein', 'Total Fat' або 'Carbohydrates' не знайдено в таблиці.")
+    print("Одного зі стовпців 'Protein', 'Total Fat' або 'Carbohydrates' не знайдено в таблиці.")
 
-# Середній вміст корисних мікроелементів
+# Перевірка наявності стовпців для мікроелементів та обчислення їх середнього значення
 micronutrients = ['Iron (% Daily Value)', 'Calcium (% Daily Value)', 'Vitamin C (% Daily Value)']
-if all(x in data.columns for x in micronutrients):
-    average_micronutrients = data[micronutrients].mean()
+if all(x in cleaned_data.columns for x in micronutrients):
+    average_micronutrients = cleaned_data[micronutrients].mean()
     print("\nСередній вміст корисних мікроелементів (у відсотках від добової норми):")
     print(average_micronutrients)
 else:
-    print("\nОдного зі стовпців 'Iron (% Daily Value)', 'Calcium (% Daily Value)' або 'Vitamin C (% Daily Value)' не знайдено в таблиці.")
+    print("Одного зі стовпців 'Iron (% Daily Value)', 'Calcium (% Daily Value)' або 'Vitamin C (% Daily Value)' не знайдено в таблиці.")
